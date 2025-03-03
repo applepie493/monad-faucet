@@ -9,7 +9,7 @@ const client = new Client({
     GatewayIntentBits.MessageContent
   ]
 });
-
+console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY);
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 const TOKEN_AMOUNT = ethers.parseEther("0.5");  // 送付する量（MONの場合）
