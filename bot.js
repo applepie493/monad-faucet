@@ -39,7 +39,7 @@ async function processQueue() {
 }
 
 client.on('messageCreate', async (message) => {
-  if (message.content.startsWith('!baklin')) {
+  if (message.content.startsWith('!mona')) {
     const address = message.content.split(' ')[1];
 
     if (!ethers.isAddress(address)) {
