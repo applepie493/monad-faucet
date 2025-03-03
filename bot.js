@@ -58,7 +58,7 @@ client.on('messageCreate', async (message) => {
   const content = message.content.trim();
 
   // アドレスのみの場合 or "!baklin <address>" の場合に反応
-  if (ethers.isAddress(content) || content.startsWith('!baklin')) {
+  if (ethers.isAddress(content) || content.startsWith('!mona')) {
     const address = content.startsWith('!mona') ? content.split(' ')[1] : content;
 
     if (!ethers.isAddress(address)) {
