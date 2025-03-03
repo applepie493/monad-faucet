@@ -26,7 +26,7 @@ async function processQueue() {
       to: address,
       value: TOKEN_AMOUNT,
     });
-    await message.reply(`Sent MON!TXハッシュ: ${tx.hash}`);
+    await message.reply(`Sent MON!TX: ${tx.hash}`);
   } catch (err) {
     console.error(err);
     await message.reply('Error');
