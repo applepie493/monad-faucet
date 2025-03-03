@@ -37,10 +37,29 @@ async function processQueue() {
     processQueue();
   }
 }
-
+/*
 client.on('messageCreate', async (message) => {
   if (message.content.startsWith('!mona')) {
     const address = message.content.split(' ')[1];
+
+    if (!ethers.isAddress(address)) {
+      return await message.reply('Please enter it again');
+    }
+
+    transactionQueue.push({ message, address });
+
+    if (transactionQueue.length === 1) {
+      processQueue(); // キューが空だった場合のみ処理を開始
+    }
+  }
+});*/
+
+client.on('messageCreate', async (message) => {
+  const content = message.content.trim();
+
+  // アドレスのみの場合 or "!baklin <address>" の場合に反応
+  if (ethers.isAddress(content) || content.startsWith('!baklin')) {
+    const address = content.startsWith('!mona') ? content.split(' ')[1] : content;
 
     if (!ethers.isAddress(address)) {
       return await message.reply('Please enter it again');
