@@ -9,6 +9,71 @@ const client = new Client({
     GatewayIntentBits.MessageContent
   ]
 });
+
+console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY);
+const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+const TOKEN_AMOUNT = ethers.parseEther("0.5");  // 送付する量（MONの場合）
+
+// 🚀 送金リクエストのキュー & フラグ
+const transactionQueue = [];
+let isProcessing = false;
+
+// 🚀 キューを処理する関数
+async function processQueue() {
+  if (isProcessing || transactionQueue.length === 0) return;
+
+  isProcessing = true;
+  const { message, address } = transactionQueue.shift();
+
+  try {
+    const tx = await wallet.sendTransaction({
+      to: address,
+      value: TOKEN_AMOUNT,
+    });
+    await message.reply(`✅ Sent! TX: ${tx.hash}`);
+  } catch (err) {
+    console.error(err);
+    await message.reply("⚠️ An error occurred. Please try again.");
+  }
+
+  isProcessing = false;
+
+  // キューが残っていれば次を処理
+  if (transactionQueue.length > 0) {
+    processQueue();
+  }
+}
+
+// 🚀 メッセージが送信されたときの処理
+client.on('messageCreate', async (message) => {
+  if (!ethers.isAddress(message.content)) return; // アドレス以外無視
+
+  transactionQueue.push({ message, address: message.content });
+
+  if (!isProcessing) {
+    processQueue();  // キューが空なら処理開始
+  } else {
+    await message.reply("🕒 Waiting for processing. Please wait your turn.");
+  }
+});
+
+// 🚀 Bot をログイン
+client.login(process.env.DISCORD_TOKEN);
+
+
+
+/*const { Client, GatewayIntentBits } = require('discord.js');
+const { ethers } = require('ethers');
+require('dotenv').config();
+
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
 console.log("PRIVATE_KEY:", process.env.PRIVATE_KEY);
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
@@ -99,7 +164,7 @@ client.on('messageCreate', async (message) => {
   isProcessing = false; // 処理が終わったらフラグOFF
 });*/
 
-const transactionQueue = [];
+/*const transactionQueue = [];
 let isProcessing = false;
 
 async function processQueue() {
@@ -139,4 +204,4 @@ client.on('messageCreate', async (message) => {
 });
 
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_TOKEN);*/
