@@ -18,6 +18,7 @@ const TOKEN_AMOUNT = ethers.parseEther("0.5");  // 送付する量（MONの場�
 // 🚀 送金リクエストのキュー & フラグ
 const transactionQueue = [];
 let isProcessing = false;
+let latestNonce = null;  // nonce を管理
 
 // 🚀 キューを処理する関数
 async function processQueue() {
@@ -27,14 +28,34 @@ async function processQueue() {
   const { message, address } = transactionQueue.shift();
 
   try {
+    // Nonceを取得（最初のトランザクションのみ最新値を取得）
+    if (latestNonce === null) {
+      latestNonce = await provider.getTransactionCount(wallet.address, "pending");
+    }
+
     const tx = await wallet.sendTransaction({
       to: address,
       value: TOKEN_AMOUNT,
+      gasPrice: ethers.parseUnits("50", "gwei"), // ガス価格を設定
+      gasLimit: 21000, // ガスリミットを設定
+      nonce: latestNonce  // 最新の nonce を使用
     });
+
+    latestNonce++;  // 次のトランザクション用に nonce を更新
+
     await message.reply(`✅ Sent! TX: ${tx.hash}`);
   } catch (err) {
-    console.error(err);
-    await message.reply("⚠️ An error occurred. Please try again.");
+    console.error("⚠️ Transaction Error:", err);
+
+    // 特定のエラーをキャッチしてログに出力
+    if (err.code === "INSUFFICIENT_FUNDS") {
+      await message.reply("⚠️ Error: Insufficient funds in wallet.");
+    } else if (err.code === "NONCE_EXPIRED") {
+      await message.reply("⚠️ Error: Nonce issue detected. Retrying...");
+      latestNonce = await provider.getTransactionCount(wallet.address, "pending"); // Nonceを再取得
+    } else {
+      await message.reply("⚠️ An error occurred. Please try again.");
+    }
   }
 
   isProcessing = false;
@@ -60,6 +81,7 @@ client.on('messageCreate', async (message) => {
 
 // 🚀 Bot をログイン
 client.login(process.env.DISCORD_TOKEN);
+
 
 
 
