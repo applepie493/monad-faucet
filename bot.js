@@ -73,7 +73,7 @@ client.on('messageCreate', async (message) => {
   }
 });*/ //多数リクエストが多くエラーになるため修正
 
-//フラグ制御
+/*フラグ制御・・・変なエラーがでる
 let isProcessing = false;  // フラグを用意
 
 client.on('messageCreate', async (message) => {
@@ -97,6 +97,45 @@ client.on('messageCreate', async (message) => {
   }
 
   isProcessing = false; // 処理が終わったらフラグOFF
+});*/
+
+const transactionQueue = [];
+let isProcessing = false;
+
+async function processQueue() {
+  if (isProcessing || transactionQueue.length === 0) return;
+
+  isProcessing = true;
+  const { message, address } = transactionQueue.shift();
+
+  try {
+    const tx = await wallet.sendTransaction({
+      to: address,
+      value: TOKEN_AMOUNT,
+    });
+    await message.reply(`✅ Sent！TX: ${tx.hash}`);
+  } catch (err) {
+    console.error(err);
+    await message.reply("⚠️ An error occurred. Please try again.");
+  }
+
+  isProcessing = false;
+
+  if (transactionQueue.length > 0) {
+    processQueue();  // 次のリクエストを処理
+  }
+}
+
+client.on('messageCreate', async (message) => {
+  if (!ethers.isAddress(message.content)) return; // アドレス以外無視
+
+  transactionQueue.push({ message, address: message.content });
+  
+  if (!isProcessing) {
+    processQueue();  // キューが空なら処理開始
+  } else {
+    await message.reply("🕒 Waiting for processing. Please wait your turn.");
+  }
 });
 
 
