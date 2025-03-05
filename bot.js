@@ -80,7 +80,7 @@ client.on('messageCreate', async (message) => {
   if (!ethers.isAddress(message.content)) return; // アドレス以外無視
 
   if (isProcessing) {
-    return await message.reply("🚫 現在処理中です。しばらくお待ちください。");
+    return await message.reply("🚫 Processing in progress. Please wait.");
   }
 
   isProcessing = true; // フラグON
@@ -93,7 +93,7 @@ client.on('messageCreate', async (message) => {
     await message.reply(`✅ MON を送付しました！TX: ${tx.hash}`);
   } catch (err) {
     console.error(err);
-    await message.reply("⚠️ エラーが発生しました。もう一度試してください。");
+    await message.reply("⚠️ An error occurred. Please try again.");
   }
 
   isProcessing = false; // 処理が終わったらフラグOFF
