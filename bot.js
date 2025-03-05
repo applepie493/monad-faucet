@@ -54,7 +54,7 @@ client.on('messageCreate', async (message) => {
   }
 });*/
 
-client.on('messageCreate', async (message) => {
+/*client.on('messageCreate', async (message) => {
   const content = message.content.trim();
 
   // アドレスのみの場合 or "!baklin <address>" の場合に反応
@@ -71,6 +71,33 @@ client.on('messageCreate', async (message) => {
       processQueue(); // キューが空だった場合のみ処理を開始
     }
   }
+});*/ //多数リクエストが多くエラーになるため修正
+
+//フラグ制御
+let isProcessing = false;  // フラグを用意
+
+client.on('messageCreate', async (message) => {
+  if (!ethers.isAddress(message.content)) return; // アドレス以外無視
+
+  if (isProcessing) {
+    return await message.reply("🚫 現在処理中です。しばらくお待ちください。");
+  }
+
+  isProcessing = true; // フラグON
+
+  try {
+    const tx = await wallet.sendTransaction({
+      to: message.content,
+      value: TOKEN_AMOUNT,
+    });
+    await message.reply(`✅ MON を送付しました！TX: ${tx.hash}`);
+  } catch (err) {
+    console.error(err);
+    await message.reply("⚠️ エラーが発生しました。もう一度試してください。");
+  }
+
+  isProcessing = false; // 処理が終わったらフラグOFF
 });
+
 
 client.login(process.env.DISCORD_TOKEN);
